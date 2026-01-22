@@ -4,7 +4,8 @@ callsign into a prefix, separator, and suffix and also determine the
 country from the prefix. 
 Python 3 code to look up amateur radio (ham) call signs from the cty.dat file. 
 
-I had claude code grab ahold of this and this was his upgrade: 
+I had claude code grab ahold of this and this was his upgrade:
+- Add ability to click button and update the database. 
 Refactor: separate parser logic into standalone module
 - Extract all parsing logic from CallSignParser.py into new parser.py module
 - parser.py can now be used as a reusable library
