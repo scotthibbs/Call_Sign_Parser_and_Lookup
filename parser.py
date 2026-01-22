@@ -9,6 +9,12 @@ as a library or imported by GUI applications.
 
 import os
 import re
+import urllib.request
+import urllib.error
+from datetime import datetime
+
+# URL for the cty.dat file
+CTY_DAT_URL = "https://www.country-files.com/cty/cty.dat"
 
 
 class CallSignParserError(Exception):
@@ -28,6 +34,11 @@ class CtyFileReadError(CallSignParserError):
 
 class InvalidCallSignError(CallSignParserError):
     """Raised when an invalid call sign is provided."""
+    pass
+
+
+class CtyDownloadError(CallSignParserError):
+    """Raised when cty.dat cannot be downloaded."""
     pass
 
 
@@ -221,6 +232,83 @@ class CallSignParser:
     def clear_cache(cls):
         """Clear the cached cty.dat data."""
         cls._cty_cache = None
+
+    @classmethod
+    def get_cty_file_path(cls):
+        """Get the full path to the cty.dat file."""
+        module_dir = os.path.dirname(__file__)
+        return os.path.join(module_dir, "cty.dat")
+
+    @classmethod
+    def get_cty_file_age_days(cls):
+        """
+        Get the age of the cty.dat file in days.
+
+        Returns:
+            int: Age in days, or -1 if file doesn't exist
+        """
+        cty_path = cls.get_cty_file_path()
+        if not os.path.exists(cty_path):
+            return -1
+
+        modified_time = os.path.getmtime(cty_path)
+        modified_date = datetime.fromtimestamp(modified_time)
+        age = datetime.now() - modified_date
+        return age.days
+
+    @classmethod
+    def get_cty_file_date(cls):
+        """
+        Get the modification date of the cty.dat file as a formatted string.
+
+        Returns:
+            str: Date string (e.g., "January 22, 2026") or "Not found"
+        """
+        cty_path = cls.get_cty_file_path()
+        if not os.path.exists(cty_path):
+            return "Not found"
+
+        modified_time = os.path.getmtime(cty_path)
+        modified_date = datetime.fromtimestamp(modified_time)
+        return modified_date.strftime("%B %d, %Y")
+
+    @classmethod
+    def download_cty_file(cls):
+        """
+        Download the latest cty.dat file from country-files.com.
+
+        Returns:
+            bool: True if download was successful
+
+        Raises:
+            CtyDownloadError: If download fails
+        """
+        cty_path = cls.get_cty_file_path()
+
+        try:
+            # Download the file
+            req = urllib.request.Request(
+                CTY_DAT_URL,
+                headers={'User-Agent': 'CallSignParser/1.0'}
+            )
+            with urllib.request.urlopen(req, timeout=30) as response:
+                data = response.read()
+
+            # Write to file
+            with open(cty_path, 'wb') as f:
+                f.write(data)
+
+            # Clear the cache so the new file gets loaded
+            cls.clear_cache()
+
+            return True
+
+        except urllib.error.URLError as e:
+            raise CtyDownloadError(f"Network error: {e.reason}")
+        except urllib.error.HTTPError as e:
+            raise CtyDownloadError(f"HTTP error {e.code}: {e.reason}")
+        except IOError as e:
+            raise CtyDownloadError(f"File write error: {e}")
 
     @classmethod
     def lookup_country(cls, checkprefix, separator):

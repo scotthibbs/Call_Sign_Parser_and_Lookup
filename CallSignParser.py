@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
 
-from parser import CallSignParser, CallSignParserError
+from parser import CallSignParser, CallSignParserError, CtyDownloadError
 
 
 """
@@ -64,6 +64,55 @@ def show_startup_error(error_msg):
     messagebox.showerror("Startup Error", error_msg)
 
 
+def update_date_label():
+    """Update the database date label."""
+    date_str = CallSignParser.get_cty_file_date()
+    lbldate.config(text=f"Database updated: {date_str}")
+
+
+def update_database():
+    """Download the latest cty.dat file."""
+    if messagebox.askyesno("Update Database",
+                           "Download the latest cty.dat from country-files.com?"):
+        try:
+            CallSignParser.download_cty_file()
+            update_date_label()
+            messagebox.showinfo("Update Complete",
+                               "Database updated successfully!")
+        except CtyDownloadError as e:
+            messagebox.showerror("Update Failed", str(e))
+
+
+def check_database_age():
+    """Check if cty.dat is old and prompt to update."""
+    age_days = CallSignParser.get_cty_file_age_days()
+
+    if age_days == -1:
+        # File doesn't exist, offer to download
+        if messagebox.askyesno("Database Missing",
+                               "cty.dat not found. Download now?"):
+            try:
+                CallSignParser.download_cty_file()
+                messagebox.showinfo("Download Complete",
+                                   "Database downloaded successfully!")
+            except CtyDownloadError as e:
+                messagebox.showerror("Download Failed", str(e))
+    elif age_days > 30:
+        # File is older than 30 days
+        if messagebox.askyesno("Database Outdated",
+                               f"cty.dat is {age_days} days old.\n"
+                               "Download the latest version?"):
+            try:
+                CallSignParser.download_cty_file()
+                messagebox.showinfo("Update Complete",
+                                   "Database updated successfully!")
+            except CtyDownloadError as e:
+                messagebox.showerror("Update Failed", str(e))
+
+
+# Check database age on startup
+check_database_age()
+
 # Verify cty.dat is accessible on startup
 try:
     # This will cache the file for future use
@@ -76,13 +125,24 @@ except CallSignParserError as e:
 lbltitle = tk.Label(frame, text="\nCall Sign Look Up")
 lbltitle.pack()
 
+# Database date label
+lbldate = tk.Label(frame, text="", fg="gray")
+lbldate.pack()
+update_date_label()
+
 # Entry Widget creation
 inputent = tk.Entry(frame, width=30, justify="center")
 inputent.pack()
 
 # Button Creation
-printButton = tk.Button(frame, text="Search", command=printinput1)
-printButton.pack()
+buttonFrame = tk.Frame(frame)
+buttonFrame.pack()
+
+printButton = tk.Button(buttonFrame, text="Search", command=printinput1)
+printButton.pack(side=tk.LEFT, padx=5)
+
+updateButton = tk.Button(buttonFrame, text="Update Database", command=update_database)
+updateButton.pack(side=tk.LEFT, padx=5)
 
 # Label Creation
 lblrepeat = tk.Label(frame, text="")
