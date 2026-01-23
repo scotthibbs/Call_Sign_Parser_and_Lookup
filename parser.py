@@ -1,6 +1,6 @@
 """
 Standalone Call Sign Parser Module
-Copyright (c) 2022 by Scott Anthony Hibbs KD4SIR
+Copyright (c) 2026 by Scott Anthony Hibbs KD4SIR
 Released under a GPLv3 License.
 
 This module provides call sign parsing functionality that can be used
