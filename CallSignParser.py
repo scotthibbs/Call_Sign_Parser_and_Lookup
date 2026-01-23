@@ -6,7 +6,7 @@ from parser import CallSignParser, CallSignParserError, CtyDownloadError
 
 """
 Python Call Sign Parser with Interface
-Copyright (c) 2022 by Scott Anthony Hibbs KD4SIR
+Copyright (c) 2026 by Scott Anthony Hibbs KD4SIR
 Released under a GPLv3 License.
 If you do use or modify this software,
 I'd really love to hear about it at scott hibbs at gmail dot com.
@@ -164,3 +164,4 @@ lblreturn.pack()
 frame.bind('<Return>', (lambda event: printinput1()))
 
 frame.mainloop()
+
